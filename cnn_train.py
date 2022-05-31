@@ -62,18 +62,6 @@ def cnn_model(train_mfccs, train_labels, test_mfccs, test_labels, classes, log, 
     # モデルの構築
     input_shape = train_mfccs.shape
     model = models.Sequential()
-    # model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(23, 100, 1)))
-    # model.add(layers.MaxPooling2D((2, 2)))
-    # # model.add(layers.Dropout(0.5))
-    # # model.add(layers.Conv2D(64, (3, 1), activation='relu', ))
-    # # model.add(layers.MaxPooling2D((2, 1)))
-    # # model.add(layers.Dropout(0.5))
-    # model.add(layers.Conv2D(64, (3, 3), activation='relu', ))
-    # model.add(layers.Flatten())
-    # model.add(layers.Dense(64, activation='relu'))
-    # model.add(layers.Dense(32, activation='relu'))
-    # model.add(layers.Dropout(0.5))
-    # model.add(layers.Dense(4, activation='softmax'))
     model.add(layers.Conv2D(32, kernel_size=(2, 2), activation='relu', input_shape=(23, 100, 1)))
     model.add(layers.Conv2D(48, kernel_size=(2, 2), activation='relu'))
     model.add(layers.Conv2D(120, kernel_size=(2, 2), activation='relu'))
@@ -167,3 +155,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    

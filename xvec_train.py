@@ -1,4 +1,5 @@
-import os, datetime
+import os
+import datetime
 import numpy as np
 
 import tensorflow as tf
@@ -51,14 +52,14 @@ def xvec_model(classes, input_shape):
     met = CategoricalAccuracy(False)
 
     model.summary()
-    
+
     # learning_rate = 1.1214526691368884e-08
     learning_rate = 1e-6
 
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-                loss=tf.keras.losses.CategoricalCrossentropy(),
-                metrics=[met])
-    
+                  loss=tf.keras.losses.CategoricalCrossentropy(),
+                  metrics=[met])
+
     return model
 
 
@@ -67,17 +68,17 @@ def model_train(model, tr_ds, va_ds, ts_ds, epochs, log, model_name):
     tf.keras.backend.clear_session()
 
     # TensorBoard callback
-    tb = TensorBoard(log_dir=os.path.join('./logs', log), 
-                              histogram_freq=1,
-                              write_images=True,
-                              update_freq='batch',
-                              )
-    
+    tb = TensorBoard(log_dir=os.path.join('./logs', log),
+                     histogram_freq=1,
+                     write_images=True,
+                     update_freq='batch',
+                     )
+
     # Early Stopping
     es = tf.keras.callbacks.EarlyStopping(verbose=1, patience=30)
 
     # Model Checkpoint
-    mc = tf.keras.callbacks.ModelCheckpoint(filepath = model_name,
+    mc = tf.keras.callbacks.ModelCheckpoint(filepath=model_name,
                                             monitor='val_loss',
                                             verbose=1,
                                             save_best_only=True,
@@ -86,7 +87,6 @@ def model_train(model, tr_ds, va_ds, ts_ds, epochs, log, model_name):
                                             period=1)
 
     # Optuna Callback
-
 
     histroy = model.fit(
         tr_ds,
@@ -102,7 +102,7 @@ def model_train(model, tr_ds, va_ds, ts_ds, epochs, log, model_name):
 # 中間層の出力用モデル
 def get_hidden_layer(model, layer_name, data):
     intermediate_layer_model = tf.keras.Model(inputs=model.input,
-                                    outputs=model.get_layer(layer_name).output)
+                                              outputs=model.get_layer(layer_name).output)
     intermediate_output = intermediate_layer_model.predict(data)
 
     return intermediate_output
@@ -116,15 +116,16 @@ def main():
     batch_size = BATCHSIZE
 
     log = "test/xvec_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    
+
     model_name = "model/model_xvec_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     if DATA_ARG == True:
         spectrograms, datas = my_data_loader.set_spectrograms_and_datas()
-    
+
     spectrograms = spectrograms.transpose(0, 2, 1)
-    train_specs, train_labels, valid_specs, valid_labels, test_specs, test_labels = my_data_loader.load_datas(spectrograms, datas, age_th, test_group, classes)
-    
+    train_specs, train_labels, valid_specs, valid_labels, test_specs, test_labels = my_data_loader.load_datas(
+        spectrograms, datas, age_th, test_group, classes)
+
     tr_ds = set_tf_dataset(train_specs, train_labels, classes=classes, batch_size=batch_size)
     va_ds = set_tf_dataset(valid_specs, valid_labels, classes=classes, shuffle=False, batch_size=1)
     ts_ds = set_tf_dataset(test_specs, test_labels, classes=classes, shuffle=False, batch_size=1)
@@ -134,7 +135,7 @@ def main():
 
     model = xvec_model(classes, input_shape)
     model_train(model, tr_ds, va_ds, ts_ds, epochs, log, model_name)
-    
+
     # モデルの保存
     # model.save_weights(model_name)
 
@@ -175,7 +176,7 @@ def create_model(trial):
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
                   loss=loss,
                   metrics=['accuracy'])
-    
+
     return model
 
 
@@ -191,26 +192,27 @@ def objective(trial):
         spectrograms, datas = my_data_loader.set_spectrograms_and_datas()
     else:
         spectrograms, datas = my_data_loader.set_spectrograms_and_datas()
-    
+
     spectrograms = spectrograms.transpose(0, 2, 1)
-    train_specs, train_labels, valid_specs, valid_labels, test_specs, test_labels = my_data_loader.load_datas(spectrograms, datas, age_th=13, test_group=TEST_GROUP, classes=CLASSES)
-    
+    train_specs, train_labels, valid_specs, valid_labels, test_specs, test_labels = my_data_loader.load_datas(
+        spectrograms, datas, age_th=13, test_group=TEST_GROUP, classes=CLASSES)
+
     tr_ds = set_tf_dataset(train_specs, train_labels, classes=CLASSES, batch_size=BATCHSIZE)
     va_ds = set_tf_dataset(valid_specs, valid_labels, classes=CLASSES, shuffle=False, batch_size=1)
     ts_ds = set_tf_dataset(test_specs, test_labels, classes=CLASSES, shuffle=False, batch_size=1)
 
     # TensorBoard callback
-    tb = TensorBoard(log_dir=os.path.join('./logs', log), 
-                              histogram_freq=1,
-                              write_images=True,
-                              update_freq='batch',
-                              )
-    
+    tb = TensorBoard(log_dir=os.path.join('./logs', log),
+                     histogram_freq=1,
+                     write_images=True,
+                     update_freq='batch',
+                     )
+
     # Early Stopping
     es = tf.keras.callbacks.EarlyStopping(verbose=1, patience=50)
 
     # Model Checkpoint
-    mc = tf.keras.callbacks.ModelCheckpoint(filepath = model_name,
+    mc = tf.keras.callbacks.ModelCheckpoint(filepath=model_name,
                                             monitor='val_loss',
                                             verbose=1,
                                             save_best_only=True,

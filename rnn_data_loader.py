@@ -9,6 +9,7 @@ import csv
 import librosa
 import librosa.display
 
+
 def get_datas():
     '''
     split_utt_age.csvの内容を
@@ -42,11 +43,11 @@ def get_spectrogram(waveform):
     hop_length = win_length // 2
     n_fft = win_length
     window = 'hann'
-    stft = librosa.stft(y=waveform, 
-                        n_fft=n_fft, 
-                        hop_length=hop_length, 
-                        win_length=win_length, 
-                        window=window, 
+    stft = librosa.stft(y=waveform,
+                        n_fft=n_fft,
+                        hop_length=hop_length,
+                        win_length=win_length,
+                        window=window,
                         center=True)
     amplitude = np.abs(stft)
     spectrogram = librosa.amplitude_to_db(amplitude, ref=np.max)
@@ -57,7 +58,7 @@ def get_spectrogram(waveform):
 def padding(spectrograms):
     length = []
     padd_specs = []
-    
+
     # スペクトログラムの時間軸フレーム数を抽出
     for i in range(len(spectrograms)):
         length.append(spectrograms[i].shape)
@@ -114,7 +115,7 @@ def get_adch_label(data, classes, age_threshold):
     4クラス
     若年者(男性) → 0, 若年者(女性) → 1, 
     大人(男性) → 2, 大人(女性) → 3
-    
+
     3クラス
     若年者 → 0
     大人(男性) → 1, 大人(女性) → 2
@@ -157,12 +158,12 @@ def get_adch_label(data, classes, age_threshold):
 
 
 def load_datas(features, datas, age_th, test_group, classes):
-    
+
     train_features = []
     train_labels = []
     valid_features = []
     valid_labels = []
-    test_features = [] 
+    test_features = []
     test_labels = []
 
     for i in range(len(features)):
@@ -176,13 +177,13 @@ def load_datas(features, datas, age_th, test_group, classes):
                 label = get_adch_label(data, classes, age_th)
                 test_features.append(feature)
                 test_labels.append(label)
-        
+
         elif group == (test_group + 1) % 10:
             if arg == 0:
                 label = get_adch_label(data, classes, age_th)
                 valid_features.append(feature)
                 valid_labels.append(label)
-        
+
         else:
             label = get_adch_label(data, classes, age_th)
             train_features.append(feature)
@@ -194,25 +195,30 @@ def load_datas(features, datas, age_th, test_group, classes):
 
     if classes == 4:
         print("train_data:", len(train_features))
-        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(train_labels == 0), np.count_nonzero(train_labels == 1), np.count_nonzero(train_labels == 2), np.count_nonzero(train_labels == 3)))
-        print("validation_data:",len(valid_features))
-        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(valid_labels == 0), np.count_nonzero(valid_labels == 1), np.count_nonzero(valid_labels == 2), np.count_nonzero(valid_labels == 3)))
-        print("test_data:",len(test_features))
-        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(test_labels == 0), np.count_nonzero(test_labels == 1), np.count_nonzero(test_labels == 2), np.count_nonzero(test_labels == 3)))
+        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(train_labels == 0),
+                                                                        np.count_nonzero(train_labels == 1), np.count_nonzero(train_labels == 2), np.count_nonzero(train_labels == 3)))
+        print("validation_data:", len(valid_features))
+        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(valid_labels == 0),
+                                                                        np.count_nonzero(valid_labels == 1), np.count_nonzero(valid_labels == 2), np.count_nonzero(valid_labels == 3)))
+        print("test_data:", len(test_features))
+        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(test_labels == 0),
+                                                                        np.count_nonzero(test_labels == 1), np.count_nonzero(test_labels == 2), np.count_nonzero(test_labels == 3)))
     elif classes == 3:
         print("train_data:", len(train_features))
-        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(train_labels == 0), np.count_nonzero(train_labels == 1), np.count_nonzero(train_labels == 2)))
-        print("validation_data:",len(valid_features))
-        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(valid_labels == 0), np.count_nonzero(valid_labels == 1), np.count_nonzero(valid_labels == 2)))
-        print("test_data:",len(test_features))
-        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(test_labels == 0), np.count_nonzero(test_labels == 1), np.count_nonzero(test_labels == 2)))
+        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(train_labels == 0),
+                                                       np.count_nonzero(train_labels == 1), np.count_nonzero(train_labels == 2)))
+        print("validation_data:", len(valid_features))
+        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(valid_labels == 0),
+                                                       np.count_nonzero(valid_labels == 1), np.count_nonzero(valid_labels == 2)))
+        print("test_data:", len(test_features))
+        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(test_labels == 0),
+                                                       np.count_nonzero(test_labels == 1), np.count_nonzero(test_labels == 2)))
     elif classes == 2:
         print("train_data:", len(train_features))
         print("若年者:{0}, 大人:{1}".format(np.count_nonzero(train_labels == 0), np.count_nonzero(train_labels == 1)))
-        print("validation_data:",len(valid_features))
+        print("validation_data:", len(valid_features))
         print("若年者:{0}, 大人:{1}".format(np.count_nonzero(valid_labels == 0), np.count_nonzero(valid_labels == 1)))
-        print("test_data:",len(test_features))
+        print("test_data:", len(test_features))
         print("若年者:{0}, 大人:{1}".format(np.count_nonzero(test_labels == 0), np.count_nonzero(test_labels == 1)))
-    
-    return train_features, train_labels, valid_features, valid_labels, test_features, test_labels
 
+    return train_features, train_labels, valid_features, valid_labels, test_features, test_labels
