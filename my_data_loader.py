@@ -304,6 +304,7 @@ def load_datas(features, datas, age_th, test_group, classes):
         print("若年者:{0}, 大人:{1}".format(np.count_nonzero(valid_labels == 0), np.count_nonzero(valid_labels == 1)))
         print("test_data:", len(test_features))
         print("若年者:{0}, 大人:{1}".format(np.count_nonzero(test_labels == 0), np.count_nonzero(test_labels == 1)))
+        
     else:
         print("train_data:", len(train_features))
         print("validation_data:", len(valid_features))
