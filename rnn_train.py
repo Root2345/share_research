@@ -25,7 +25,7 @@ def set_tf_dataset(spectrograms, labels, classes, shuffle=True, batch_size=32):
 
 def rnn_model(classes):
     model = models.Sequential()
-    model.add(layers.Masking(mask_value=1, input_shape=(1000, 257)))
+    model.add(layers.Masking(mask_value=1, input_shape=(500, 257)))
     model.add(layers.SimpleRNN(128))
     model.add(layers.Dense(classes, activation='softmax'))
 
@@ -44,8 +44,14 @@ def rnn_model(classes):
 
 def lstm_model(classes):
     model = models.Sequential()
-    model.add(layers.Masking(mask_value=1, input_shape=(1000, 257)))
+    model.add(layers.Masking(mask_value=1, input_shape=(500, 257)))
     model.add(layers.LSTM(32))
+    model.add(layers.BatchNormalization())
+    model.add(layers.LSTM(32))
+    model.add(layers.BatchNormalization())
+    model.add(layers.LSTM(32))
+    model.add(layers.BatchNormalization())
+    model.add(layers.Dense(128, activation='relu'))
     model.add(layers.Dense(classes, activation='softmax'))
 
     model.summary()
@@ -63,7 +69,7 @@ def lstm_model(classes):
 
 def gru_model(classes):
     model = models.Sequential()
-    model.add(layers.Masking(mask_value=1, input_shape=(1000, 257)))
+    model.add(layers.Masking(mask_value=1, input_shape=(500, 257)))
     model.add(layers.GRU(32))
     model.add(layers.Dense(classes, activation='softmax'))
 
@@ -189,6 +195,4 @@ def main():
 
 
 if __name__ == '__main__':
-    path = os.getcwd()
-    print(path)
     main()

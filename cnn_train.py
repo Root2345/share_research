@@ -89,6 +89,7 @@ def cnn_model(train_mfccs, train_labels, test_mfccs, test_labels, classes, log, 
 
     def mapping_func(mfccs, labels):
         return mfccs, labels
+        
     # tr_ds = tf.data.Dataset.zip((tr_d,tr_l))
     train_mfccs = tf.expand_dims(train_mfccs, -1)
     # train_mfccs = train_mfccs.reshape((-1, 23, 100, 1))

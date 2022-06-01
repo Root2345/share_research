@@ -59,13 +59,13 @@ def padding(spectrograms):
     length = []
     padd_specs = []
 
-    # スペクトログラムの時間軸フレーム数を抽出
+    # スペクトログラムの時間軸フレーム数を取得
     for i in range(len(spectrograms)):
         length.append(spectrograms[i].shape)
 
     # フレームの最大値を取得
     # max_frame = max(length)[1]
-    # 一個だけ長過ぎるデータがあるので1000フレームに設定
+    # 一個だけ長過ぎるデータがあるので500フレームに設定
     max_frame = 500
 
     # スペクトログラムをパディング
