@@ -2,9 +2,11 @@ import numpy as np
 import csv
 import librosa
 import librosa.display
+import random
 
+random.seed(1234)
 
-def get_datas():
+def get_datas(path='/home/s226059/workspace/split_utt_age_choice.csv'):
     '''
     split_utt_age.csvの内容を
     datas の中に格納して返す
@@ -14,9 +16,10 @@ def get_datas():
     3: sex(str)
     4: age(2~59)
     5: argment data or not(0, 1)
-    '''
-    with open('/home/s226059/workspace/split_utt_age.csv', 'r', encoding='utf-8-sig') as f:
-        # with open('/home/s226059/workspace/split_utt_age_no_arg.csv', 'r', encoding='utf-8-sig') as f:
+    6: データ数の制限(0, 1)
+    # '''
+    print("label file path:"+path)
+    with open(path, 'r', encoding='utf-8-sig') as f:
         reader = csv.reader(f)
         datas = [row for row in reader]
 
@@ -38,11 +41,11 @@ def get_spectrogram(waveform):
     hop_length = win_length // 2
     n_fft = win_length
     window = 'hann'
-    stft = librosa.stft(y=waveform,
-                        n_fft=n_fft,
-                        hop_length=hop_length,
-                        win_length=win_length,
-                        window=window,
+    stft = librosa.stft(y=waveform, 
+                        n_fft=n_fft, 
+                        hop_length=hop_length, 
+                        win_length=win_length, 
+                        window=window, 
                         center=True)
     amplitude = np.abs(stft)
     spectrogram = librosa.amplitude_to_db(amplitude, ref=np.max)
@@ -65,7 +68,7 @@ def slice_spectrograms(spectrograms, datas):
         flames = spectrogram.shape[1]
 
         slice_frame = 100
-        slide_flame = 20
+        slide_flame = 50
         split_num = (flames - slice_frame) // slide_flame + 1
         if flames - slice_frame < 0:
             emb = slice_frame - flames
@@ -76,14 +79,14 @@ def slice_spectrograms(spectrograms, datas):
             # スライスする要素の定義
             start_frame = slide_flame * i
             end_frame = start_frame + slice_frame
-
+            
             # 配列のスライス
             spectrogram_slice = spectrogram[:, start_frame:end_frame]
             # Conv1dの実験のために一時的にコメントアウト
             # spectrogram_slice = np.expand_dims(spectrogram_slice, -1)
             sl_spectrograms.append(spectrogram_slice)
             sl_datas.append(datas[s])
-
+    
     return sl_spectrograms, sl_datas
 
 
@@ -98,7 +101,7 @@ def set_spectrograms_and_datas():
         # spectrogramに変換
         spectrogram = np.array(get_spectrogram(waveform))
         spectrograms.append(spectrogram)
-
+    
     # spectrogramを50フレームにスライス
     spectrograms, datas = slice_spectrograms(spectrograms, datas)
 
@@ -152,7 +155,7 @@ def slice_mfccs(mfccs, datas):
         mfcc = np.array(mfccs[s])
         flames = mfcc.shape[1]
 
-        slice_frame = 50
+        slice_frame = 400
         split_num = (flames - slice_frame) // 20 + 1
         if flames - slice_frame < 0:
             print("フレーム数が足りません")
@@ -161,13 +164,13 @@ def slice_mfccs(mfccs, datas):
             # スライスする要素の定義
             start_frame = 20 * i
             end_frame = start_frame + slice_frame
-
+            
             # 配列のスライス
             mfcc_slice = mfcc[:, start_frame:end_frame]
             mfcc_slice = np.expand_dims(mfcc_slice, -1)
             sl_mfccs.append(mfcc_slice)
             sl_datas.append(datas[s])
-
+    
     return sl_mfccs, sl_datas
 
 
@@ -182,7 +185,7 @@ def set_mfccs_and_datas():
         # mfccに変換
         mfcc = get_mfcc(waveform)
         mfccs.append(mfcc)
-
+    
     # mfccを50フレームにスライス
     mfccs, datas = slice_mfccs(mfccs, datas)
 
@@ -194,7 +197,7 @@ def get_adch_label(data, classes, age_threshold):
     4クラス
     若年者(男性) → 0, 若年者(女性) → 1, 
     大人(男性) → 2, 大人(女性) → 3
-
+    
     3クラス
     若年者 → 0
     大人(男性) → 1, 大人(女性) → 2
@@ -221,7 +224,7 @@ def get_adch_label(data, classes, age_threshold):
             else:
                 label = 3
 
-    if classes == 3:
+    elif classes == 3:
         if age <= age_threshold:
             label = 0
         else:
@@ -230,24 +233,45 @@ def get_adch_label(data, classes, age_threshold):
             else:
                 label = 2
 
-    if classes == 2:
+    elif classes == 2:
         if age <= age_threshold:
             label = 0
         else:
             label = 1
+
     else:
         label = age
 
     return label
 
 
-def load_datas(features, datas, age_th, test_group, classes):
+def rand_indexs_nodup(from_num, to_num):
+    """
+    データを指定するランダムなインデックスを生成
+    from_num: 元データの個数
+    to_num: 制限後データの個数(train:400, valid/test:50)
+    """
+    ns = []
+    while len(ns) < to_num:
+        n = random.randint(0, from_num-1)
+        if not n in ns:
+            ns.append(n)
+    return ns
 
+
+def load_datas(features, datas, age_th, test_group, classes=3):
+    """
+    features: 特徴量
+    datas: ラベル・パス等
+    age_th: 年齢閾値
+    test_group: テストデータとして使用するデータのグループ番号
+    class: 分類クラスの数
+    """
     train_features = []
     train_labels = []
     valid_features = []
     valid_labels = []
-    test_features = []
+    test_features = [] 
     test_labels = []
 
     for i in range(len(features)):
@@ -255,59 +279,51 @@ def load_datas(features, datas, age_th, test_group, classes):
         data = datas[i]
         group = int(data[0])
         arg = int(data[5])
+        choice = int(data[6])
 
         if group == test_group:
             if arg == 0:
                 label = get_adch_label(data, classes, age_th)
                 test_features.append(feature)
                 test_labels.append(label)
-
+        
         elif group == (test_group + 1) % 10:
             if arg == 0:
                 label = get_adch_label(data, classes, age_th)
                 valid_features.append(feature)
                 valid_labels.append(label)
-
+        
         else:
-            label = get_adch_label(data, classes, age_th)
-            train_features.append(feature)
-            train_labels.append(label)
+            if choice == 1:
+                label = get_adch_label(data, classes, age_th)
+                train_features.append(feature)
+                train_labels.append(label)
 
     train_labels = np.array(train_labels)
     valid_labels = np.array(valid_labels)
     test_labels = np.array(test_labels)
 
-    if classes == 4:
+    # データの絞り込み
+    
+
+    if classes == 3:
         print("train_data:", len(train_features))
-        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(train_labels == 0),
-                                                                        np.count_nonzero(train_labels == 1), np.count_nonzero(train_labels == 2), np.count_nonzero(train_labels == 3)))
-        print("validation_data:", len(valid_features))
-        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(valid_labels == 0),
-                                                                        np.count_nonzero(valid_labels == 1), np.count_nonzero(valid_labels == 2), np.count_nonzero(valid_labels == 3)))
-        print("test_data:", len(test_features))
-        print("若年者(男性):{0}, 若年者(女性):{1}, 大人(男性):{2}, 大人(女性):{3}".format(np.count_nonzero(test_labels == 0),
-                                                                        np.count_nonzero(test_labels == 1), np.count_nonzero(test_labels == 2), np.count_nonzero(test_labels == 3)))
-    elif classes == 3:
-        print("train_data:", len(train_features))
-        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(train_labels == 0),
-                                                       np.count_nonzero(train_labels == 1), np.count_nonzero(train_labels == 2)))
-        print("validation_data:", len(valid_features))
-        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(valid_labels == 0),
-                                                       np.count_nonzero(valid_labels == 1), np.count_nonzero(valid_labels == 2)))
-        print("test_data:", len(test_features))
-        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(test_labels == 0),
-                                                       np.count_nonzero(test_labels == 1), np.count_nonzero(test_labels == 2)))
+        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(train_labels == 0), np.count_nonzero(train_labels == 1), np.count_nonzero(train_labels == 2)))
+        print("validation_data:",len(valid_features))
+        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(valid_labels == 0), np.count_nonzero(valid_labels == 1), np.count_nonzero(valid_labels == 2)))
+        print("test_data:",len(test_features))
+        print("若年者:{0}, 大人(男性):{1}, 大人(女性):{2}".format(np.count_nonzero(test_labels == 0), np.count_nonzero(test_labels == 1), np.count_nonzero(test_labels == 2)))
     elif classes == 2:
         print("train_data:", len(train_features))
         print("若年者:{0}, 大人:{1}".format(np.count_nonzero(train_labels == 0), np.count_nonzero(train_labels == 1)))
-        print("validation_data:", len(valid_features))
+        print("validation_data:",len(valid_features))
         print("若年者:{0}, 大人:{1}".format(np.count_nonzero(valid_labels == 0), np.count_nonzero(valid_labels == 1)))
-        print("test_data:", len(test_features))
+        print("test_data:",len(test_features))
         print("若年者:{0}, 大人:{1}".format(np.count_nonzero(test_labels == 0), np.count_nonzero(test_labels == 1)))
-        
     else:
         print("train_data:", len(train_features))
-        print("validation_data:", len(valid_features))
-        print("test_data:", len(test_features))
+        print("validation_data:",len(valid_features))
+        print("test_data:",len(test_features))
 
     return train_features, train_labels, valid_features, valid_labels, test_features, test_labels
+
